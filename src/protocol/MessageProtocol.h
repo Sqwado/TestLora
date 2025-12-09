@@ -35,6 +35,7 @@
 #define MSG_TYPE_PRESSURE       0x06  // Pression (futur)
 #define MSG_TYPE_LIGHT          0x07  // Luminosité (futur)
 #define MSG_TYPE_MOTION         0x08  // Mouvement (futur)
+#define MSG_TYPE_ENVIRONMENT    0x09  // Température + pression (+ humidité)
 
 // ============================================
 // MAGIC NUMBERS
@@ -174,6 +175,29 @@ public:
     }
     
     /**
+     * Encode un message environnement (température, pression, humidité optionnelle)
+     * Format: [temp_x100 (2B signé)] [pressure_hPa_x10 (2B non signé)] [humidity_pct (1B, 0-100 ou 0xFF si absent)]
+     */
+    static uint16_t encodeEnvironmentMessage(uint8_t sourceId, float temperatureC, float pressureHpa, float humidityPct, uint8_t* output) {
+        uint8_t data[5];
+        
+        int16_t temp_x100 = (int16_t)(temperatureC * 100.0f);
+        uint16_t pressure_x10 = (uint16_t)(pressureHpa * 10.0f);
+        uint8_t humidityByte = 0xFF;
+        if (humidityPct >= 0.0f && humidityPct <= 100.0f) {
+            humidityByte = (uint8_t)(humidityPct + 0.5f);
+        }
+        
+        data[0] = temp_x100 & 0xFF;
+        data[1] = (temp_x100 >> 8) & 0xFF;
+        data[2] = pressure_x10 & 0xFF;
+        data[3] = (pressure_x10 >> 8) & 0xFF;
+        data[4] = humidityByte;
+        
+        return encodeMessage(MSG_TYPE_ENVIRONMENT, sourceId, data, 5, output);
+    }
+    
+    /**
      * Encode un ping
      * Format data: [timestamp (4 bytes, little endian)]
      */
@@ -254,6 +278,7 @@ public:
             case MSG_TYPE_PRESSURE:     return "PRESS";
             case MSG_TYPE_LIGHT:        return "LIGHT";
             case MSG_TYPE_MOTION:       return "MOTION";
+            case MSG_TYPE_ENVIRONMENT:  return "ENV";
             default:                    return "UNKNOWN";
         }
     }
@@ -281,6 +306,40 @@ public:
     static uint8_t decodeHumanCount(const ProtocolMessage* msg) {
         if (msg->dataSize < 1) return 0;
         return msg->data[0];
+    }
+    
+    /**
+     * Décode un message environnement (température, pression, humidité)
+     */
+    static void decodeEnvironment(const ProtocolMessage* msg, float* temperatureOut, float* pressureOut, float* humidityOut) {
+        if (temperatureOut) {
+            *temperatureOut = 0.0f;
+        }
+        if (pressureOut) {
+            *pressureOut = 0.0f;
+        }
+        if (humidityOut) {
+            *humidityOut = -1.0f;
+        }
+        
+        if (msg->dataSize < 4) {
+            return;
+        }
+        
+        if (temperatureOut) {
+            int16_t temp_x100 = msg->data[0] | (msg->data[1] << 8);
+            *temperatureOut = temp_x100 / 100.0f;
+        }
+        if (pressureOut) {
+            uint16_t pressure_x10 = msg->data[2] | (msg->data[3] << 8);
+            *pressureOut = pressure_x10 / 10.0f;
+        }
+        if (humidityOut && msg->dataSize >= 5) {
+            uint8_t humidity = msg->data[4];
+            if (humidity <= 100) {
+                *humidityOut = humidity;
+            }
+        }
     }
     
     /**
@@ -344,6 +403,17 @@ public:
                 Serial.print("(" + String(dist, 1) + "cm) ");
                 Serial.print("v=" + String(speed) + "cm/s ");
                 Serial.println("res=" + String(res));
+            }
+        }
+        else if (msg->type == MSG_TYPE_ENVIRONMENT && msg->dataSize >= 4) {
+            float temp = 0.0f;
+            float pressure = 0.0f;
+            float humidity = -1.0f;
+            decodeEnvironment(msg, &temp, &pressure, &humidity);
+            Serial.println(String(prefix) + "Temp     : " + String(temp, 1) + " °C");
+            Serial.println(String(prefix) + "Pression : " + String(pressure, 1) + " hPa");
+            if (humidity >= 0.0f) {
+                Serial.println(String(prefix) + "Humidité : " + String(humidity, 0) + " %");
             }
         }
         else if (msg->type == MSG_TYPE_TEXT) {

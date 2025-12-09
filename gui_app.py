@@ -29,6 +29,7 @@ MSG_TYPE_TEMP_DATA = 0x01
 MSG_TYPE_HUMAN_DETECT = 0x02
 MSG_TYPE_HUMAN_COUNT = 0x03
 MSG_TYPE_SENSOR_DATA = 0x04
+MSG_TYPE_ENVIRONMENT = 0x09
 MSG_TYPE_TEXT = 0x10
 MSG_TYPE_STATUS = 0x11
 MSG_TYPE_PING = 0x20
@@ -43,6 +44,7 @@ def get_type_name(msg_type):
         MSG_TYPE_HUMAN_DETECT: "HUMAN",
         MSG_TYPE_HUMAN_COUNT: "HUMAN_COUNT",
         MSG_TYPE_SENSOR_DATA: "SENSOR_DATA",
+        MSG_TYPE_ENVIRONMENT: "ENV",
         MSG_TYPE_TEXT: "TEXT",
         MSG_TYPE_STATUS: "STATUS",
         MSG_TYPE_PING: "PING",
@@ -120,6 +122,17 @@ def decode_protocol_message(data_bytes):
             
             result['decoded_value'] = f"{count} {'cible' if count <= 1 else 'cibles'}"
             result['targets'] = targets
+            
+        elif msg_type == MSG_TYPE_ENVIRONMENT and data_size >= 4:
+            temp_x100 = struct.unpack('<h', payload[:2])[0]
+            pressure_x10 = struct.unpack('<H', payload[2:4])[0]
+            humidity = None
+            if data_size >= 5 and payload[4] <= 100:
+                humidity = payload[4]
+            display = f"{temp_x100/100.0:.1f} °C | {pressure_x10/10.0:.1f} hPa"
+            if humidity is not None:
+                display += f" | {humidity}% RH"
+            result['decoded_value'] = display
             
         elif msg_type == MSG_TYPE_TEXT:
             try:

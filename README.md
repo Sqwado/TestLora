@@ -1,6 +1,7 @@
 # 🌐 Système IoT Multi-Module LoRa ESP32
 
 > 🚀 **Démarrage rapide** : Voir [QUICKSTART.md](QUICKSTART.md) pour une installation en 5 minutes  
+> 📝 **Compte rendu TD** : Voir [TD_GATEWAY_REPORT.md](TD_GATEWAY_REPORT.md) pour le suivi pédagogique
 
 ## 📋 Vue d'ensemble
 
@@ -14,6 +15,7 @@ Système de communication IoT sécurisé basé sur ESP32 avec support multi-band
 - ✅ **Protocole personnalisé** : Messages binaires structurés avec typage
 - ✅ **Interface GUI Python** : Gestion simplifiée de l'appairage et communication
 - ✅ **Mode dual** : Utilisation simultanée de deux modules LoRa
+- ✅ **Gateway Raspberry Pi** : Réception 433/900 MHz + stockage SQLite + TUI (`raspberry/`)
 
 ---
 
@@ -222,6 +224,7 @@ TestLora/
 ├── platformio.ini              # Configuration PlatformIO
 ├── README.md                   # Documentation complète
 ├── QUICKSTART.md               # 🚀 Guide démarrage rapide (5 min)
+├── raspberry/                  # 🥧 Passerelle Raspberry Pi + SQLite + TUI
 ├── gui_app.py                  # Interface Python classique
 ├── dashboard_gui.py            # Interface Dashboard avec radar
 ├── requirements.txt            # Dépendances Python
@@ -326,6 +329,7 @@ pio run -t upload && pio device monitor -b 115200  # Tout en un
 | `TEXT` | `<message>` | Envoyer un message texte | `TEXT Hello World` |
 | `PING` | - | Envoyer un ping | `PING` |
 | `TEMP` | `<valeur>` | Envoyer une température (°C) | `TEMP 23.5` |
+| `ENV` | `<temp> <pression> [humidité]` | Paquet compressé température + pression (+ humidité optionnelle) | `ENV 23.8 1012.7 46` |
 | `HUMAN_COUNT` | `[nombre]` | Envoyer comptage humain (capteur ou manuel) | `HUMAN_COUNT` ou `HUMAN_COUNT 3` |
 | `SENSOR_TEST` | - | Test du capteur 24GHz (affichage brut 5s) | `SENSOR_TEST` |
 | `AUTO_ON` | - | Activer envoi automatique capteur | `AUTO_ON` |

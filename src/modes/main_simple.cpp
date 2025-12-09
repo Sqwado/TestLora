@@ -448,6 +448,45 @@ void loop() {
 				Serial.print(temp, 1);
 				Serial.println(" °C");
 			}
+			else if (line.startsWith("ENV")) {
+				// ENV <tempC> <pression_hPa> [humidité]
+				String args = line.substring(3);
+				args.trim();
+				if (args.length() == 0) {
+					Serial.println("[TX] ENV requiert au moins température et pression");
+				} else {
+					int firstSpace = args.indexOf(' ');
+					if (firstSpace == -1) {
+						Serial.println("[TX] Format: ENV <tempC> <pression_hPa> [humidité]");
+					} else {
+						float temp = args.substring(0, firstSpace).toFloat();
+						String remaining = args.substring(firstSpace + 1);
+						remaining.trim();
+						int secondSpace = remaining.indexOf(' ');
+						float pressure = 0.0f;
+						float humidity = -1.0f;
+						if (secondSpace == -1) {
+							pressure = remaining.toFloat();
+						} else {
+							pressure = remaining.substring(0, secondSpace).toFloat();
+							humidity = remaining.substring(secondSpace + 1).toFloat();
+						}
+						
+						msgSize = MessageProtocol::encodeEnvironmentMessage(DEVICE_ID, temp, pressure, humidity, buffer);
+						Serial.print("[TX] Envoi ENV: ");
+						Serial.print(temp, 1);
+						Serial.print(" °C | ");
+						Serial.print(pressure, 1);
+						Serial.print(" hPa");
+						if (humidity >= 0.0f) {
+							Serial.print(" | ");
+							Serial.print(humidity, 0);
+							Serial.print(" %RH");
+						}
+						Serial.println();
+					}
+				}
+			}
 			else if (line.startsWith("HUMAN ")) {
 				// Détection humaine: HUMAN 1 ou HUMAN 0
 				bool detected = line.substring(6).toInt() != 0;

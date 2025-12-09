@@ -126,6 +126,15 @@ pio run -t upload && pio device monitor -b 115200
 
 ✅ **Fonctionne** : Module configuré !
 
+#### Paquet ENV compact
+
+```
+> ENV 24.6 1013.2 48
+[TX] OK (6 bytes)
+```
+
+Ce paquet regroupe température (°C), pression (hPa) et humidité (%) dans 5 octets, idéal pour les mesures météo compressées.
+
 ### Test 2 : Capteur 24GHz
 
 Activer dans `Config.h` :

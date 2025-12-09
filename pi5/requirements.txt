@@ -1,0 +1,23 @@
+# Dépendances pour la Gateway LoRa Raspberry Pi 5
+
+# Communication série
+pyserial>=3.5
+
+# Bibliothèque LoRa E220
+ebyte-lora-e220>=0.0.5
+
+# Chiffrement AES
+pycryptodome>=3.19.0
+
+# GPIO (optionnel, pour Raspberry Pi)
+RPi.GPIO>=0.7.1
+
+# MQTT (pour publier les messages)
+paho-mqtt>=1.6.1
+
+# InfluxDB (optionnel, pour export vers Grafana)
+influxdb>=5.3.1
+
+# Base de données SQLite (inclus dans Python standard, pas besoin d'installation)
+# sqlite3
+
